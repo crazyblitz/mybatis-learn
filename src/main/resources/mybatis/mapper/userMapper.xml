@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ley.mybatis.learn.mapper.UserMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.ley.mybatis.learn.entity.User">
+        <id column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="user_age" property="userAge"/>
+        <association property="idCard" column="user_id"
+                     select="com.ley.mybatis.learn.mapper.IdCardMapper.getIdCardById"/>
+        <collection property="courses" column="user_id"
+                    select="com.ley.mybatis.learn.mapper.CourseMapper.getCoursesByUserId"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        user_id, user_name, user_age
+    </sql>
+
+
+    <select id="getUserById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM tb_user
+        WHERE user_id = #{userId}
+    </select>
+
+
+    <select id="getUsersByMap" resultMap="BaseResultMap" parameterType="map">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM tb_user
+        <bind name="userNameLike" value="'%'+userName+'%'"/>
+        WHERE user_name LIKE #{userNameLike} AND
+        user_age >= #{userAge}
+    </select>
+
+    <select id="getUsersByAnnotation" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM tb_user
+        <bind name="userNameLike" value="'%'+userName+'%'"/>
+        WHERE user_name LIKE #{userNameLike} AND
+        user_age >= #{userAge}
+    </select>
+
+
+    <select id="getUsersByBO" resultMap="BaseResultMap" parameterType="com.ley.mybatis.learn.bo.UserQueryBO">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM tb_user
+        <bind name="userNameLike" value="'%'+userName+'%'"/>
+        WHERE user_name LIKE #{userNameLike} AND
+        user_age >= #{userAge}
+    </select>
+
+    <!--test if标签-->
+    <select id="getUserByUserName" resultMap="BaseResultMap" parameterType="string">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM tb_user
+        where 1=1
+        <if test="userName !=null and userName !=''">
+            <bind name="userNameLike" value="'%'+userName+'%'"/>
+            AND user_name LIKE #{userNameLike}
+        </if>
+    </select>
+
+
+    <select id="getUserByCondition" resultMap="BaseResultMap" parameterType="com.ley.mybatis.learn.bo.UserQueryBO">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM tb_user
+        WHERE 1=1
+        <choose>
+            <when test="userAge!=null">
+                AND user_age >= #{userAge}
+            </when>
+            <when test="userName!=null and userName!=''">
+                AND user_name like CONCAT('%',#{userName},'%')
+            </when>
+            <otherwise>
+                AND user_age >=0
+            </otherwise>
+        </choose>
+    </select>
+
+
+</mapper>
